@@ -3,15 +3,10 @@ workspace(name = "plutus")
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-# git_repository(
-#     name = "io_tweag_rules_haskell",
-#     remote = "https://github.com/tweag/rules_haskell.git",
-#     commit = "316f858fc6aebf9140cfebf6befe97b3bd55e7c0",
-# )
-
-local_repository(
+git_repository(
     name = "io_tweag_rules_haskell",
-    path = "/Users/davidsmith/tweag/rules_haskell",
+    remote = "https://github.com/tweag/rules_haskell.git",
+    commit = "5fc09f73a859cc177363f7029bf5d6a2b630ed9e",
 )
 
 load("@io_tweag_rules_haskell//haskell:repositories.bzl", "haskell_repositories")

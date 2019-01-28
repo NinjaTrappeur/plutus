@@ -54,6 +54,9 @@ purescript_bundle(
     deps = [":playground_purs"],
 )
 
+# // TODO: can we get rid of these runtime_deps?
+# // Also we need to check that nix isn't building the whole project
+# // just to get the dependencies!
 purescript_test(
     name = "playground_test",
     srcs = glob(["test/**/*.purs"]) + glob(["test/**/*.js"]) + glob(["test/**/*.json"]),
