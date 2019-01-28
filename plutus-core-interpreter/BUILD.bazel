@@ -78,7 +78,7 @@ sh_test(
 
 sh_test(
     name = "stylish",
-    srcs = ["@stylish-haskell//:bin/run.sh"],
+    srcs = ["@stylish_haskell//:bin/run.sh"],
     args = ["plutus-core-interpreter"],
     deps = ["//:stylish_haskell_lib"],
     data = glob(["**/*.hs"], exclude = ["**/.stack-work/**"]),

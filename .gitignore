@@ -36,3 +36,4 @@ result*
 gh-pages
 /bazel-*
 BUILD
+/tools
