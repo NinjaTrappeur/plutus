@@ -73,7 +73,7 @@ let
                                      script = import localLib.iohkNix.tests.shellcheckScript {inherit pkgs;};
                                    };
   # We need a specific version of bazel
-  bazelNixpkgs = import (localLib.iohkNix.fetchNixpkgs ./bazel-nixpkgs-src.json) {};
+  bazelNixpkgs = import (localLib.iohkNix.fetchNixpkgs ./nixpkgs-bazel-src.json) {};
 in
 pkgs.mkShell {
   # XXX: hack for macosX, this flag disables bazel usage of xcode
