@@ -180,36 +180,43 @@ def _run_test(target_path, entry_module, entry_function):
 #     return [DefaultInfo(runfiles = runfiles)]
 #
 
-_default_purs_pkg_url_linux = \
-    "https://github.com/purescript/purescript/releases/download/v0.11.7/linux64.tar.gz"
-_default_purs_pkg_url_darwin = \
-    "https://github.com/purescript/purescript/releases/download/v0.11.7/macos.tar.gz"
-_default_purs_pkg_sha256_linux = \
-    "fd8b96240e9485f75f21654723f416470d8049655ac1d82890c13187038bfdde"
-_default_purs_pkg_sha256_macos = \
-    "d8caa11148f8a9a2ac89b0b0c232ed8038913576e46bfc7463540c09b3fe88ce"
-_default_purs_pkg_strip_prefix = \
+_PURESCRIPT_BINDISTS = {
+  "darwin" : \
+    ("https://github.com/purescript/purescript/releases/download/v0.11.7/macos.tar.gz", \
+     "d8caa11148f8a9a2ac89b0b0c232ed8038913576e46bfc7463540c09b3fe88ce"),
+  "linux" : \
+    ("https://github.com/purescript/purescript/releases/download/v0.11.7/linux64.tar.gz", \
+     "fd8b96240e9485f75f21654723f416470d8049655ac1d82890c13187038bfdde")
+}
+
+_DEFAULT_PURS_PKG_STRIP_PREFIX = \
     "purescript"
 
-def purescript_toolchain(url = "default", sha256 = _default_purs_pkg_sha256_linux, strip_prefix = _default_purs_pkg_strip_prefix):
-    is_darwin = select({
-        "@bazel_tools//src/conditions:darwin": True,
-        "//conditions:default": False,
-    })
+def purescript_toolchain(url = "default", sha256 = None, strip_prefix = _DEFAULT_PURS_PKG_STRIP_PREFIX):
 
-    if is_darwin and url == "default":
-        url = _default_purs_pkg_url_darwin
-        sha256 = _default_purs_pkg_sha256_macos
-    elif url == "default":
-        url = _default_purs_pkg_url_linux
-
-    http_archive(
+  if url == "default":
+    for target in _PURESCRIPT_BINDISTS:
+      (t_url, t_sha256) = _PURESCRIPT_BINDISTS[target]
+      http_archive(
+        name = "purs",
+        urls = [t_url],
+        sha256 = t_sha256,
+        strip_prefix = strip_prefix,
+        build_file_content = """exports_files(["purs"])""",
+        exec_constraints = [{
+            "darwin": "@bazel_tools//platforms:osx",
+            "linux": "@bazel_tools//platforms:linux",
+        }.get(target)]
+      )
+  else:
+      http_archive(
         name = "purs",
         urls = [url],
         sha256 = sha256,
         strip_prefix = strip_prefix,
         build_file_content = """exports_files(["purs"])""",
-    )
+        exec_constraints = ["//conditions:default"]
+      )
 
 _purescript_dep_build_content = """
 package(default_visibility = ["//visibility:public"])

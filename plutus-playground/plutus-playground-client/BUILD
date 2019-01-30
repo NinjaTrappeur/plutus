@@ -23,6 +23,7 @@ genrule(
 )
 
 purescript_library(
+    purs = "@purescript",
     name = "playground_purs",
     srcs = glob(["src/**/*.purs"]) + glob(["src/**/*.js"]) + glob(["generated/**/*.purs"]) + generated_files,
     deps = [

@@ -53,6 +53,9 @@ let
   ghc = haskellPackages.ghcWithPackages (ps: haskellInputs);
   happy = haskellPackages.happy;
   alex = haskellPackages.alex;
+  nodejs = pkgs.nodejs;
+  yarn = pkgs.yarn;
+  purescript = (import (localLib.iohkNix.fetchNixpkgs ./plutus-playground/plutus-playground-client/nixpkgs-src.json) {}).purescript;
   mkBazelScript = {name, script}: pkgs.stdenv.mkDerivation {
           name = name;
           unpackPhase = "true";
@@ -113,7 +116,16 @@ pkgs.mkShell {
     ln -nfs ${happy} ./tools/happy
     ln -nfs ${alex} ./tools/alex
     ln -nfs ${hlintScript} ./tools/hlint
+    ln -nfs ${yarn} ./tools/yarn
     ln -nfs ${stylishHaskellScript} ./tools/stylish-haskell
     ln -nfs ${shellcheckScript} ./tools/shellcheck
+    ln -nfs ${purescript} ./tools/purescript
+    # Dirty hack: yarn_install is looking for yarn at ./tools/nodejs/bin/yarn
+    # regardless whether yarn is vendored in the node_repositories rule.
+    # We are creating this env by hand.
+    mkdir -p tools/nodejs/bin
+    ln -nfs ${nodejs}/bin/* ./tools/nodejs/bin/
+    ln -nfs ${yarn}/bin/* ./tools/nodejs/bin/
+    ln -nfs ${purescript}/bin/* ./tools/nodejs/bin/
   '';
 }

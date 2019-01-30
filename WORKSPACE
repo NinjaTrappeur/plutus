@@ -78,6 +78,43 @@ new_local_repository(
   build_file_content = local_pkg,
 )
 
+new_local_repository(
+  name = "nodejs",
+  path = "./tools/nodejs",
+  build_file_content = '''
+package(default_visibility = ["//visibility:public"])
+
+filegroup(
+    name = "bin",
+    srcs = glob(["bin/*"]),
+)
+
+filegroup(
+    name = "node",
+    srcs = ["bin/node"],
+)
+''',
+)
+
+new_local_repository(
+  name = "yarn",
+  path = "./tools/yarn",
+  build_file_content = local_pkg,
+)
+
+new_local_repository(
+  name = "purescript",
+  path = "./tools/purescript",
+  build_file_content = '''
+package(default_visibility = ["//visibility:public"])
+
+filegroup(
+    name = "purescript",
+    srcs = glob(["bin/*"]),
+)
+''',
+)
+
 register_toolchains("//:ghc")
 
 ############################################################ Font End Stuff ######################################################3
@@ -127,7 +164,11 @@ rules_nodejs_dependencies()
 
 load("@build_bazel_rules_nodejs//:defs.bzl", "node_repositories", "yarn_install")
 
-node_repositories(package_json = ["//plutus-playground/plutus-playground-client:package.json"])
+node_repositories(
+    vendored_node = "@nodejs",
+    vendored_yarn = "@yarn",
+    package_json = ["//plutus-playground/plutus-playground-client:package.json"],
+)
 
 yarn_install(
     name = "npm",
