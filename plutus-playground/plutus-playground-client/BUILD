@@ -1,4 +1,4 @@
-load("@bazel_rules_purescript//purescript:purescript.bzl", "purescript_bundle", "purescript_library", "purescript_test")
+load("@io_bazel_rules_purescript//purescript:purescript.bzl", "purescript_bundle", "purescript_library", "purescript_test", "purescript_toolchain", "purs_toolchain")
 load("@build_bazel_rules_nodejs//:defs.bzl", "nodejs_binary")
 package(default_visibility = ["//visibility:public"])
 
@@ -22,8 +22,9 @@ genrule(
     tools = ["//plutus-playground/plutus-playground-server:plutus-playground-server-app"],
 )
 
+purescript_toolchain()
+
 purescript_library(
-    purs = "@purescript",
     name = "playground_purs",
     srcs = glob(["src/**/*.purs"]) + glob(["src/**/*.js"]) + glob(["generated/**/*.purs"]) + generated_files,
     deps = [

@@ -105,6 +105,11 @@ pkgs.mkShell {
       echo "To get started try running"
       echo ""
       echo 'bazel test --test_env BUILD_WORKSPACE_DIRECTORY=$(pwd) //...'
+      echo ""
+      echo "[!] It looks like you are using a ''${ARCH} nix-based system. In order to build this project, you probably need to add the two following host_platform entries to your .bazelrc.local file."
+      echo ""
+      echo "common --host_platform=@bazel_rules_purescript//purescript/platforms:''${ARCH}_x86_64_nixpkgs"
+
     fi
 
     # source bazel bash completion

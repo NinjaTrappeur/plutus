@@ -1,8 +1,17 @@
 """Rules for purescript"""
 
+
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_skylib//lib:paths.bzl", "paths")
+load(":toolchain.bzl",
+     _purescript_toolchain = "purescript_toolchain",
+     _purescript_distributions = "purescript_distributions",
+     _purs_toolchain = "purs_toolchain",
+)
 
+purescript_toolchain = _purescript_toolchain
+purescript_distributions = _purescript_distributions
+purs_toolchain = _purs_toolchain
 # run_template = """
 # #!/usr/bin/env bash
 # set -o errexit
@@ -180,47 +189,30 @@ def _run_test(target_path, entry_module, entry_function):
 #     return [DefaultInfo(runfiles = runfiles)]
 #
 
-_PURESCRIPT_BINDISTS = {
-  "darwin" : \
-    ("https://github.com/purescript/purescript/releases/download/v0.11.7/macos.tar.gz", \
-     "d8caa11148f8a9a2ac89b0b0c232ed8038913576e46bfc7463540c09b3fe88ce"),
-  "linux" : \
-    ("https://github.com/purescript/purescript/releases/download/v0.11.7/linux64.tar.gz", \
-     "fd8b96240e9485f75f21654723f416470d8049655ac1d82890c13187038bfdde")
-}
+# def purescript_toolchain(url = "default", sha256 = None, strip_prefix = _DEFAULT_PURS_PKG_STRIP_PREFIX):
 
-_DEFAULT_PURS_PKG_STRIP_PREFIX = \
-    "purescript"
-
-def purescript_toolchain(url = "default", sha256 = None, strip_prefix = _DEFAULT_PURS_PKG_STRIP_PREFIX):
-
-  if url == "default":
-    for target in _PURESCRIPT_BINDISTS:
-      (t_url, t_sha256) = _PURESCRIPT_BINDISTS[target]
-      http_archive(
-        name = "purs",
-        urls = [t_url],
-        sha256 = t_sha256,
-        strip_prefix = strip_prefix,
-        build_file_content = """exports_files(["purs"])""",
-        exec_constraints = [{
-            "darwin": "@bazel_tools//platforms:osx",
-            "linux": "@bazel_tools//platforms:linux",
-        }.get(target)]
-      )
-  else:
-      http_archive(
-        name = "purs",
-        urls = [url],
-        sha256 = sha256,
-        strip_prefix = strip_prefix,
-        build_file_content = """exports_files(["purs"])""",
-        exec_constraints = ["//conditions:default"]
-      )
+#   if url == "default":
+#     for target in _PURESCRIPT_BINDISTS:
+#       (t_url, t_sha256) = _PURESCRIPT_BINDISTS[target]
+#       http_archive(
+#         name = "purs",
+#         urls = [t_url],
+#         sha256 = t_sha256,
+#         strip_prefix = strip_prefix,
+#         build_file_content = """exports_files(["purs"])""",
+#       )
+#   else:
+#       http_archive(
+#         name = "purs",
+#         urls = [url],
+#         sha256 = sha256,
+#         strip_prefix = strip_prefix,
+#         build_file_content = """exports_files(["purs"])""",
+#       )
 
 _purescript_dep_build_content = """
 package(default_visibility = ["//visibility:public"])
-load("@bazel_rules_purescript//purescript:purescript.bzl", "purescript_library")
+load("@io_bazel_rules_purescript//purescript:purescript.bzl", "purescript_library")
 
 purescript_library(
     name = "pkg",
@@ -269,7 +261,7 @@ def _path_above_dir(path, dir):
   return "/".join(topParts)
 
 def _purescript_library(ctx):
-    purs = ctx.executable.purs
+    purs_path = ctx.toolchains["@io_bazel_rules_purescript//purescript:toolchain_type"].purs_info.purs_path
     srcs = ctx.files.srcs
     deps = ctx.attr.deps
     zipper = ctx.executable._zipper
@@ -318,7 +310,7 @@ def _purescript_library(ctx):
 
     ctx.actions.run_shell(
         inputs = srcs + ps_dep_srcs.to_list() + [deps_zip],
-        tools = [purs, zipper],
+        tools = [zipper],
         command = """
           set -e
 
@@ -330,7 +322,7 @@ def _purescript_library(ctx):
 
           {purs} compile --output {output} $@
         """.format(zipper = ctx.executable._zipper.path,
-                   purs = ctx.executable.purs.path,
+                   purs = purs_path,
                    output = outdir.path,
                    deps_zip = deps_zip.path,
                    ),
@@ -365,12 +357,6 @@ def _purescript_library(ctx):
 purescript_library = rule(
     implementation = _purescript_library,
     attrs = {
-        "purs": attr.label(
-            allow_single_file = True,
-            executable = True,
-            cfg = "host",
-            default = "@purs",
-        ),
         "srcs": attr.label_list(
             allow_files = True,
         ),
@@ -379,6 +365,7 @@ purescript_library = rule(
         ),
         "_zipper": attr.label(executable=True, cfg="host", default=Label("@bazel_tools//tools/zip:zipper"), allow_files=True)
     },
+    toolchains = ["@io_bazel_rules_purescript//purescript:toolchain_type"]
 )
 
 def _trim_package_node_modules(package_name):
@@ -459,6 +446,7 @@ purescript_bundle = rule(
     ),
     "_zipper": attr.label(executable=True, cfg="host", default=Label("@bazel_tools//tools/zip:zipper"), allow_files=True)
   },
+  toolchains = ["@io_bazel_rules_purescript//purescript:toolchain_type"]
 )
 
 def _purescript_test(ctx):
@@ -583,4 +571,5 @@ purescript_test = rule(
         ),
     },
     test = True,
+    toolchains = ["@io_bazel_rules_purescript//purescript:toolchain_type"],
 )
